@@ -2,15 +2,16 @@ import csv
 
 import matplotlib.pyplot as plt
 
+from MyMHT import MyMHT
 from openmht.cli import write_uv_csv, read_uv_csv
 from openmht.mht import MHT
 from truth_data import simulate, visualize_simulation
 
 
 def generate_data():
-    num_objects = 3
+    num_objects = 4
     num_steps = 5
-    velocity = 0.05
+    velocity = 0.075
     noise_std = 0.005  # Standard deviation of Gaussian noise
     missed_detection_prob = 0.02  # Probability of missed detection
 
@@ -38,23 +39,21 @@ def plot_MTT(tracks):
     plt.ylabel('Y-axis')
     plt.xlim(0, 1)
     plt.ylim(0, 1)
-    plt.title('Multiple Lines Plot')
+    plt.title('MHT Best Hypothesis')
     ax = plt.gca()
     ax.set_aspect('equal', adjustable='box')
-    # Display the plot
-    plt.grid(True)
     plt.show()
 
 
 parameters = {
     'v': 307200,
-    'dth': 0.5,
+    'dth': 0.25,
     'k': 0,
     'q': 0.00001,
-    'r': 0.01,
+    'r': 0.005,
     'n': 2,
-    'bth': 150,
-    'nmiss': 1,
+    'bth': 250,
+    'nmiss': 2,
     'pd': 0.98,
     'ck': False
 }
@@ -68,9 +67,10 @@ mht = MHT(detections, parameters)
 mhtSol = mht.run()
 write_uv_csv("mhtSol.csv", mhtSol)
 plot_MTT(mhtSol)
-# plot_2d_tracks("mhtSol.csv")
 
 
 # my = MyMHT(detections, parameters)
 # mySol = my.run()
 # write_uv_csv("mySol.csv", mySol)
+# plot_MTT(mySol)
+

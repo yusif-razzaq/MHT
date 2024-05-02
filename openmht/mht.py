@@ -203,8 +203,6 @@ class MHT:
         assert len(self.__detections) > 0, "No detections provided."
         solution_coordinates = self.__generate_track_trees()
         logging.info("MHT complete.")
-        for track in solution_coordinates:
-            print(track)
-
+        for track in solution_coordinates: print(track)
         return solution_coordinates
     

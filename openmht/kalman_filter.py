@@ -20,7 +20,7 @@ class KalmanFilter:
         self.__missed_detection_score = np.log(1. - (1. / self.__image_area))
         self.__track_score = self.__missed_detection_score 
         self.__d_th = dth
-        self.__nmiss = nmiss  # Number of missed detections
+        self.__nmiss = nmiss - 1  # Number of missed detections
         self.meas = 0
         self.v = False
         self.ck = ck

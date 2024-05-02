@@ -21,17 +21,16 @@ class MyMHT:
 
     def run(self):
         for index, frame in enumerate(self.observation_history):
+            print(f"Processing frame {index}...")
             self.track_count = len(self.track_leaves)  # Existing tracks before frame
             self.generate_tracks(index, frame)
             self.add_missed_detections()
             solution_coordinates = self.prune_trees(index)
-        logging.info("MHT complete.")
         return solution_coordinates
 
     def generate_tracks(self, k, frame):
         self.detections_map.append({})
         for detection_index, detection in enumerate(frame):
-            branches_added = 0  # Number of branches added to the track tree at this frame
             detection_id = str(detection_index)
             self.detections_map[k][detection_id] = detection
 
@@ -42,15 +41,13 @@ class MyMHT:
                 extended_branch.update(detection)
                 self.track_leaves.append(extended_branch)
                 self.track_hists.append(self.track_hists[i] + [detection_id])
-                branches_added += 1
 
             # Create new branches for each detection
-            self.track_leaves.append(
-                KalmanFilter(detection, v=self.params.get('v'), dth=self.params.get('dth'), k=self.params.get('k'), q=self.params.get('q'), r=self.params.get('r'), nmiss=self.params.get('nmiss')))
+            self.track_leaves.append(KalmanFilter(detection, v=self.params.get('v'), dth=self.params.get('dth'),
+                                                  k=self.params.get('k'), q=self.params.get('q'), r=self.params.get('r'),
+                                                  nmiss=self.params.get('nmiss'), ck=self.params.get('ck')))
             track_id = [''] * k + [detection_id]
             self.track_hists.append(track_id)
-            branches_added += 1
-        return branches_added
 
     def prune_trees(self, k):
         prune_index = max(0, k - self.params.get('n'))
@@ -62,10 +59,8 @@ class MyMHT:
             track_hist = self.track_hists[track]
             track_coordinates = []
             for i, detection in enumerate(track_hist):
-                if detection == '':
-                    track_coordinates.append(None)
-                else:
-                    track_coordinates.append(self.detections_map[i][detection])
+                if detection == '': track_coordinates.append(None)
+                else: track_coordinates.append(self.detections_map[i][detection])
             solution_coordinates.append(track_coordinates)
 
             # Prune branches that diverge from the solution track tree at frame k-N
@@ -74,28 +69,20 @@ class MyMHT:
                 for non_solution_id in non_solution_ids:
                     if d_id == self.track_hists[non_solution_id][prune_index]:
                         self.prune_ids.add(non_solution_id)
+
         for i in sorted(self.prune_ids, reverse=True):
             del self.track_hists[i]
             del self.track_leaves[i]
         return solution_coordinates
 
     def add_missed_detections(self):
-        # Update the previous filter with a dummy detection
-        nmiss_prune_count = 0
+        # Update the previous filter with a missed detection
+        self.prune_ids.clear()
         for j in range(self.track_count):
-
-            # Update with dummy detection coordinates
             update_success = self.track_leaves[j].update(None)
-
-            # Append a dummy detection ID to the track detection list
             self.track_hists[j].append('')
-
-            # If the track was pruned, add it to the prune list
             if not update_success:
                 self.prune_ids.add(j)
-                nmiss_prune_count += 1
-        if nmiss_prune_count > 0:
-            logging.info("[nmiss] Pruned %d branch(es)", nmiss_prune_count)
 
     def get_conflicting_tracks(self):
         # Create a conflict matrix for each frame. Each row is a pair of conflicting tracks by index.
@@ -118,7 +105,6 @@ class MyMHT:
         Generate a global hypothesis by finding the maximum weighted independent
         set of a graph with tracks as vertices, and edges between conflicting tracks.
         """
-        logging.info("Calculating MWIS...")
         gh_graph = WeightedGraph()
         for index, track in enumerate(self.track_leaves):
             gh_graph.add_weighted_vertex(str(index), track.get_track_score())
@@ -126,26 +112,9 @@ class MyMHT:
         gh_graph.set_edges(conflicting_tracks)
 
         mwis_ids = gh_graph.mwis()
-        logging.info("MWIS complete.")
 
         return mwis_ids
 
 
 if __name__ == '__main__':
-    parameters = {
-        'v': 307200,
-        'dth': 1000,
-        'k': 0,
-        'q': 0.00001,
-        'r': 0.01,
-        'n': 1,
-        'bth': 100,
-        'nmiss': 3,
-        'pd': 0.9
-    }
-    my = MyMHT(observations_history, parameters)
-    mht = MHT(observations_history, parameters)
-    truth = mht.run()
-    sol = my.run()
-    # write_uv_csv(output_file, solution_coordinates)
     pass
