@@ -12,7 +12,7 @@ class KalmanFilter:
         self.__dims = len(initial_observation)
         x = np.ndarray(shape=(self.__dims, 1), dtype=float, buffer=np.array(initial_observation))
         self.__Q = np.diag(np.full(self.__dims, q))
-        self.__xhat = x  # a posteri estimate of x
+        self.xhat = x  # a posteri estimate of x
         self.__P = np.identity(self.__dims)
         self.__K = k  # gain or blending factor
         self.__R = r  # estimate of measurement variance, change to see effect
@@ -21,6 +21,7 @@ class KalmanFilter:
         self.__track_score = self.__missed_detection_score 
         self.__d_th = dth
         self.__nmiss = nmiss  # Number of missed detections
+        self.meas = 0
         self.v = False
         self.ck = ck
 
@@ -35,6 +36,7 @@ class KalmanFilter:
             
             # Increment missed detection counter
             self.__nmiss += 1
+            if self.ck: self.xhat += self.v
 
             # Prune track if missed detection counter exceeds threshold
             if self.__nmiss > 3:
@@ -43,23 +45,25 @@ class KalmanFilter:
         else:
             # Reset missed detection counter
             self.__nmiss = 0
+            self.meas += 1
 
             # Time update
             x = np.ndarray(shape=(self.__dims, 1), dtype=float, buffer=np.array(z))
-            if self.ck and self.v is False: self.v = x - self.__xhat
-            mu = self.__xhat + self.v
+            if self.ck and self.meas > 1: self.v = x - self.xhat
+            mu = self.xhat + self.v
             sigma = self.__P + self.__Q
             d_squared = self.__mahalanobis_distance(x, mu, sigma)
+            d = np.linalg.norm(x - mu)
 
             # Gating
-            if d_squared <= self.__d_th:
-                self.__track_score += self.__motion_score(sigma, d_squared)
+            if d <= self.__d_th:
+                self.__track_score += self.__motion_score(sigma, d)
 
                 # Measurement update
                 self.__K = sigma / (sigma + self.__R)
                 x_hat = mu + np.dot(self.__K, (x - mu))
-                if self.ck: self.v = x_hat - self.__xhat
-                self.__xhat = x_hat
+                # if self.ck: self.v = x_hat - self.xhat
+                self.xhat = x_hat
 
                 I = np.identity(self.__dims)
                 self.__P = (I - self.__K) * sigma
@@ -67,7 +71,9 @@ class KalmanFilter:
         return True
 
     def __motion_score(self, sigma, d_squared):
-        mot = (np.log(self.__image_area/2.*np.pi) - .5 * np.log(np.linalg.det(sigma)) - d_squared / 2.).item()
+        # mot = (np.log(self.__image_area/2.*np.pi) - .5 * np.log(np.linalg.det(sigma)) - d_squared / 2.).item()
+        # mot = (- .5 * np.log(np.linalg.det(sigma)) - d_squared / 200.).item()
+        mot = 10 - d_squared.item()
 
         return mot
 

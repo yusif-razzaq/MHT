@@ -122,6 +122,7 @@ class MHT:
 
             # Prune subtrees that diverge from the solution_trees at frame k-N
             prune_index = max(0, frame_index-n_scan)
+            # prune_index = frame_index-n_scan
             conflicting_tracks = self.__get_conflicting_tracks(track_detections)
             solution_ids = self.__global_hypothesis(kalman_filters, conflicting_tracks)
             non_solution_ids = list(set(range(len(kalman_filters))) - set(solution_ids))
@@ -138,6 +139,7 @@ class MHT:
                 solution_coordinates.append(track_coordinates)
 
                 # Prune branches that diverge from the solution track tree at frame k-N
+                # if prune_index > -1:
                 d_id = track_detections[solution_id][prune_index]
                 if d_id != '':
                     for non_solution_id in non_solution_ids:
@@ -201,6 +203,8 @@ class MHT:
         assert len(self.__detections) > 0, "No detections provided."
         solution_coordinates = self.__generate_track_trees()
         logging.info("MHT complete.")
+        for track in solution_coordinates:
+            print(track)
 
         return solution_coordinates
     

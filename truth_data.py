@@ -51,7 +51,7 @@ def simulate(num_objects, num_steps, velocity, noise_std, missed_detection_prob)
 
 
 # Function to visualize the simulation
-def visualize_simulation(true_positions_history, observations_history):
+def visualize_simulation(true_positions_history, observations_history, show=True):
     fig, ax = plt.subplots()
     norm = Normalize(vmin=0, vmax=len(true_positions_history) - 1)
     cmap = plt.get_cmap('viridis')
@@ -76,7 +76,8 @@ def visualize_simulation(true_positions_history, observations_history):
     ax = plt.gca()
     ax.set_aspect('equal', adjustable='box')
     plt.savefig('truthPlot.png', format='png')
-    plt.show()
+    if show: plt.show()
+    else: plt.close()
 
 
 # Parameters
