@@ -58,6 +58,7 @@ class MHT:
         k = self.__params.get('k')
         q = self.__params.get('q')
         r = self.__params.get('r')
+        ck = self.__params.get('ck')
 
         # b_th = int(self.__params.pop())  # Max. number of track tree branches
         # nmiss = self.__params.nmiss  # Max. number of false observations in tracks
@@ -87,7 +88,7 @@ class MHT:
                 # Create a new branch with the current detection:
 
                 # Create a new Kalman filter
-                kalman_filters.append(KalmanFilter(detection, v=v, dth=dth, k=k, q=q, r=r, nmiss=nmiss))
+                kalman_filters.append(KalmanFilter(detection, v=v, dth=dth, k=k, q=q, r=r, nmiss=nmiss, ck=ck))
 
                 # Create a new track detection list (list of detection IDs for each frame)
                 # Each track detection list is a branch of the track tree, and is used to

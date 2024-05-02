@@ -8,7 +8,7 @@ __license__ = "GPL-3.0"
 
 class KalmanFilter:
     """Kalman filter for 2D & 3D vectors."""
-    def __init__(self, initial_observation, v=307200, dth=1000, k=0, q=1e-5, r=0.01, nmiss=3):
+    def __init__(self, initial_observation, v=307200, dth=1000, k=0, q=1e-5, r=0.01, nmiss=3, ck=False):
         self.__dims = len(initial_observation)
         x = np.ndarray(shape=(self.__dims, 1), dtype=float, buffer=np.array(initial_observation))
         self.__Q = np.diag(np.full(self.__dims, q))
@@ -18,10 +18,11 @@ class KalmanFilter:
         self.__R = r  # estimate of measurement variance, change to see effect
         self.__image_area = v
         self.__missed_detection_score = np.log(1. - (1. / self.__image_area))
-        self.__track_score = self.__missed_detection_score
+        self.__track_score = self.__missed_detection_score 
         self.__d_th = dth
         self.__nmiss = nmiss  # Number of missed detections
         self.v = False
+        self.ck = ck
 
     def get_track_score(self):
         """Return the track score."""
@@ -30,7 +31,7 @@ class KalmanFilter:
     def update(self, z):
         """Update the Kalman filter with a new observation."""
         if z is None:
-            self.__track_score += self.__missed_detection_score
+            self.__track_score += self.__missed_detection_score 
             
             # Increment missed detection counter
             self.__nmiss += 1
@@ -45,9 +46,7 @@ class KalmanFilter:
 
             # Time update
             x = np.ndarray(shape=(self.__dims, 1), dtype=float, buffer=np.array(z))
-            if self.v is False:
-                self.v = x - self.__xhat
-                print(self.v)
+            if self.ck and self.v is False: self.v = x - self.__xhat
             mu = self.__xhat + self.v
             sigma = self.__P + self.__Q
             d_squared = self.__mahalanobis_distance(x, mu, sigma)
@@ -58,7 +57,9 @@ class KalmanFilter:
 
                 # Measurement update
                 self.__K = sigma / (sigma + self.__R)
-                self.__xhat = mu + np.dot(self.__K, (x - mu))
+                x_hat = mu + np.dot(self.__K, (x - mu))
+                if self.ck: self.v = x_hat - self.__xhat
+                self.__xhat = x_hat
 
                 I = np.identity(self.__dims)
                 self.__P = (I - self.__K) * sigma

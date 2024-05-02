@@ -29,14 +29,15 @@ def generate_data():
 
 parameters = {
     'v': 307200,
-    'dth': 1500,
+    'dth': 5000,
     'k': 0,
     'q': 0.00001,
     'r': 0.01,
     'n': 3,
-    'bth': 100,
-    'nmiss': 5,
-    'pd': 0.95
+    'bth': 150,
+    'nmiss': 10,
+    'pd': 0.90,
+    'ck': False
 }
 
 # generate_data()
