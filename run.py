@@ -10,7 +10,7 @@ from truth_data import simulate, visualize_simulation
 
 def generate_data():
     num_objects = 4
-    num_steps = 5
+    num_steps = 7
     velocity = 0.075
     noise_std = 0.005  # Standard deviation of Gaussian noise
     missed_detection_prob = 0.02  # Probability of missed detection
@@ -47,30 +47,30 @@ def plot_MTT(tracks):
 
 parameters = {
     'v': 307200,
-    'dth': 0.25,
+    'dth': 0.5,
     'k': 0,
     'q': 0.00001,
-    'r': 0.005,
+    'r': 0.01,
     'n': 2,
-    'bth': 250,
+    'bth': 150,
     'nmiss': 2,
     'pd': 0.98,
-    'ck': False
+    'ck': True
 }
 
-# generate_data()
+generate_data()
 sample_file = "SampleData/SampleInput.csv"
 file = "data.csv"
 detections = read_uv_csv(file)
 
-mht = MHT(detections, parameters)
-mhtSol = mht.run()
-write_uv_csv("mhtSol.csv", mhtSol)
-plot_MTT(mhtSol)
+# mht = MHT(detections, parameters)
+# mhtSol = mht.run()
+# write_uv_csv("mhtSol.csv", mhtSol)
+# plot_MTT(mhtSol)
 
 
-# my = MyMHT(detections, parameters)
-# mySol = my.run()
-# write_uv_csv("mySol.csv", mySol)
-# plot_MTT(mySol)
+my = MyMHT(detections, parameters)
+mySol = my.run()
+write_uv_csv("mySol.csv", mySol)
+plot_MTT(mySol)
 

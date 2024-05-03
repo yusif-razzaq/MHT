@@ -73,6 +73,8 @@ class MyMHT:
         for i in sorted(self.prune_ids, reverse=True):
             del self.track_hists[i]
             del self.track_leaves[i]
+        # if k == len(self.observation_history) - 1:
+        #     for kf in self.track_leaves: print(kf.hist)
         return solution_coordinates
 
     def add_missed_detections(self):
